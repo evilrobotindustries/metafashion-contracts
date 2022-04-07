@@ -4,6 +4,6 @@
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
-[submodule "lib/openzeppelin-test-helpers"]
-	path = lib/openzeppelin-test-helpers
-	url = https://github.com/openzeppelin/openzeppelin-test-helpers
+[submodule "lib/ERC721A"]
+	path = lib/ERC721A
+	url = https://github.com/chiru-labs/ERC721A

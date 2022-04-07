@@ -2,17 +2,8 @@
 pragma solidity 0.8.10;
 
 import "../../lib/ds-test/src/test.sol";
+import "./interfaces/CheatCodes.t.sol";
 import "../Contract.sol";
-
-interface CheatCodes {
-    // Expects an error on next call
-    function expectRevert() external;
-    function expectRevert(bytes calldata) external;
-    function expectRevert(bytes4) external;
-
-    // Sets the *next* call's msg.sender to be the input address
-    function prank(address) external;
-}
 
 contract OwnableTests is DSTest {
     MetaFashion _contract;
@@ -34,17 +25,19 @@ contract OwnableTests is DSTest {
 
     function testCannotPauseWhenAlreadyPaused() public {
         assertTrue(_contract.paused());
-        cheats.expectRevert(abi.encodeWithSignature("Panic(uint256)", 0x11));
+        cheats.expectRevert("Pausable: paused");
         _contract.pause();
     }
 
-    function testFailPauseAsNotOwner() public {
+    function testCannotPauseAsNotOwner() public {
         cheats.prank(address(0));
+        cheats.expectRevert("Ownable: caller is not the owner");
         _contract.pause();
     }
 
-    function testFailUnpauseAsNotOwner() public {
+    function testCannotUnpauseAsNotOwner() public {
         cheats.prank(address(0));
+        cheats.expectRevert("Ownable: caller is not the owner");
         _contract.unpause();
     }
 }
