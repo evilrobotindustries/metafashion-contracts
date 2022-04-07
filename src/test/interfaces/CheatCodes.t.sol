@@ -1,3 +1,5 @@
+pragma solidity 0.8.10;
+
 // https://book.getfoundry.sh/reference/cheatcodes.html
 interface CheatCodes {
 

@@ -3,41 +3,34 @@ pragma solidity 0.8.10;
 
 import "../../lib/ds-test/src/test.sol";
 import "./interfaces/CheatCodes.t.sol";
-import "../Contract.sol";
+import "../MetaFashion.sol";
 
 contract OwnableTests is DSTest {
     MetaFashion _contract;
     CheatCodes cheats = CheatCodes(HEVM_ADDRESS);
 
+    string constant URI = "https://metafashionhq.io/";
+    bytes32 constant VIP_MERKLE_ROOT = bytes32(bytes("as9d87sad98as7d98sa7d"));
+
     function setUp() public {
-        _contract = new MetaFashion();
+        _contract = new MetaFashion(VIP_MERKLE_ROOT);
     }
 
-    function testPausedInitially() public {
-        assertTrue(_contract.paused());
-    }
-
-    function testUnpauses() public {
-        assertTrue(_contract.paused());
-        _contract.unpause();
-        assertTrue(!_contract.paused());
-    }
-
-    function testCannotPauseWhenAlreadyPaused() public {
-        assertTrue(_contract.paused());
-        cheats.expectRevert("Pausable: paused");
-        _contract.pause();
-    }
-
-    function testCannotPauseAsNotOwner() public {
+    function testCannotPauseAsNonOwner() public {
         cheats.prank(address(0));
         cheats.expectRevert("Ownable: caller is not the owner");
         _contract.pause();
     }
 
-    function testCannotUnpauseAsNotOwner() public {
+    function testCannotUnpauseAsNonOwner() public {
         cheats.prank(address(0));
         cheats.expectRevert("Ownable: caller is not the owner");
         _contract.unpause();
+    }
+
+    function testCannotSetBaseURIAsNonOwner() public {
+        cheats.prank(address(0));
+        cheats.expectRevert("Ownable: caller is not the owner");
+        _contract.setBaseURI(URI);
     }
 }
