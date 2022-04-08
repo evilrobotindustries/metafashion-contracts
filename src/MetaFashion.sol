@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.10;
 
-import "../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
-import "../lib/openzeppelin-contracts/contracts/security/Pausable.sol";
-import "../lib/openzeppelin-contracts/contracts/utils/cryptography/MerkleProof.sol";
-import "../lib/ERC721A/contracts/ERC721A.sol";
+import "ERC721A/ERC721A.sol";
+import "ERC721A/extensions/ERC721ABurnable.sol";
+import "openzeppelin-contracts/contracts/access/Ownable.sol";
+import "openzeppelin-contracts/contracts/security/Pausable.sol";
+import "openzeppelin-contracts/contracts/utils/cryptography/MerkleProof.sol";
 
 error TestError();
 error VIPMintInactive();
@@ -13,7 +14,7 @@ error TransactionMintLimitExceeded();
 error TransactionLimitExceeded();
 error MintingPaused();
 
-contract MetaFashion is ERC721A, Pausable, Ownable {
+contract MetaFashion is ERC721A, ERC721ABurnable, Pausable, Ownable {
 
     enum ContractStatus {
         Paused,
@@ -24,23 +25,23 @@ contract MetaFashion is ERC721A, Pausable, Ownable {
     // state variables
 
     /// @notice The maximum number of mints per transaction.
-    uint8 constant PUBLIC_MAX_MINT = 5;
-    uint8 constant PUBLIC_MAX_TRANSACTIONS = 3;
-    uint256 constant PUBLIC_PRICE = 0.085 ether;
-    uint8 constant VIP_MAX_MINT = 3;
-    uint8 constant VIP_MAX_TRANSACTIONS = 1;
-    uint256 constant VIP_PRICE = 0.075 ether;
+    uint8 private constant _PUBLIC_MAX_MINT = 5;
+    uint8 private constant _PUBLIC_MAX_TRANSACTIONS = 3;
+    uint256 private constant _PUBLIC_PRICE = 0.085 ether;
+    uint8 private constant _VIP_MAX_MINT = 3;
+    uint8 private constant _VIP_MAX_TRANSACTIONS = 1;
+    uint256 private constant _VIP_PRICE = 0.075 ether;
 
-    string baseURI;
-    ContractStatus private status = ContractStatus.Paused;
-    bytes32 _vipMerkleRoot;
-
+    ContractStatus private _status = ContractStatus.Paused;
+    string private _tokenBaseURI;
+    bytes32 private _vipMerkleRoot;
+    
     // events
 
     // modifiers
     modifier whenVIP() {
         // TODO
-        if (status != ContractStatus.VIPOnly) revert VIPMintInactive();
+        if (_status != ContractStatus.VIPOnly) revert VIPMintInactive();
         _;
     }
 
@@ -55,7 +56,7 @@ contract MetaFashion is ERC721A, Pausable, Ownable {
     // external
 
     function vipMint(uint8 quantity, bytes32[] calldata proof) external payable whenNotPaused whenVIP {
-        if (quantity > VIP_MAX_MINT) revert TransactionMintLimitExceeded();
+        if (quantity > _VIP_MAX_MINT) revert TransactionMintLimitExceeded();
         // Validate VIP eligibility
         if (
             !MerkleProof.verify(
@@ -73,10 +74,10 @@ contract MetaFashion is ERC721A, Pausable, Ownable {
     }
 
     function publicMint(uint8 quantity) external payable whenNotPaused {
-        if (quantity > PUBLIC_MAX_MINT) revert TransactionMintLimitExceeded();
+        if (quantity > _PUBLIC_MAX_MINT) revert TransactionMintLimitExceeded();
         // Check public transaction limit
         uint64 transactions = _getAux(_msgSender()) + 1;
-        if (transactions > PUBLIC_MAX_TRANSACTIONS)
+        if (transactions > _PUBLIC_MAX_TRANSACTIONS)
             revert TransactionLimitExceeded();
 
         _safeMint(_msgSender(), quantity);
@@ -97,17 +98,17 @@ contract MetaFashion is ERC721A, Pausable, Ownable {
     }
 
     function setBaseURI(string calldata uri) public onlyOwner {
-        baseURI = uri;
+        _tokenBaseURI = uri;
     }
 
-    function setContractStatus(ContractStatus contractStatus) public onlyOwner {
-        status = contractStatus;
+    function setContractStatus(ContractStatus status) public onlyOwner {
+        _status = status;
     }
 
     // internal
 
     function _baseURI() internal view override returns (string memory) {
-        return baseURI;
+        return _tokenBaseURI;
     }
 
     function _startTokenId() internal pure override returns (uint256) {

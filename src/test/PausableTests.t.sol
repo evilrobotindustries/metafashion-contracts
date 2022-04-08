@@ -1,19 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.10;
 
-import "../../lib/ds-test/src/test.sol";
-import "./interfaces/CheatCodes.t.sol";
-import "../MetaFashion.sol";
+import "./Test.t.sol";
 
-contract PausableTests is DSTest {
-    MetaFashion _contract;
-    CheatCodes cheats = CheatCodes(HEVM_ADDRESS);
-
-    bytes32 constant VIP_MERKLE_ROOT = bytes32(bytes("as9d87sad98as7d98sa7d"));
-
-    function setUp() public {
-        _contract = new MetaFashion(VIP_MERKLE_ROOT);
-    }
+contract PausableTests is Test {
 
     function testPausedInitially() public {
         assertTrue(_contract.paused());
@@ -36,7 +26,7 @@ contract PausableTests is DSTest {
 
     function testCannotPauseWhenAlreadyPaused() public {
         assertTrue(_contract.paused());
-        cheats.expectRevert("Pausable: paused");
+        _cheatCodes.expectRevert("Pausable: paused");
         _contract.pause();
     }
 
@@ -44,7 +34,7 @@ contract PausableTests is DSTest {
         assertTrue(_contract.paused());
         _contract.unpause();
 
-        cheats.expectRevert("Pausable: not paused");
+        _cheatCodes.expectRevert("Pausable: not paused");
         _contract.unpause();
     }
 
