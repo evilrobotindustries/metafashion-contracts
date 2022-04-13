@@ -70,6 +70,8 @@ contract MetaFashion is ERC721A, ERC721ABurnable, Pausable, Ownable {
         uint256 minted = _numberMinted(_msgSender());
         if (minted > 0) revert TransactionLimitExceeded();
 
+        // Safe minting is reentrant safe and doubles as an gas-optimized reentrancy guard since V3
+        // https://chiru-labs.github.io/ERC721A/#/erc721a?id=_mint
         _safeMint(_msgSender(), quantity);
     }
 
@@ -80,11 +82,11 @@ contract MetaFashion is ERC721A, ERC721ABurnable, Pausable, Ownable {
         if (transactions > _PUBLIC_MAX_TRANSACTIONS)
             revert TransactionLimitExceeded();
 
+        // Safe minting is reentrant safe and doubles as an gas-optimized reentrancy guard since V3 
+        // https://chiru-labs.github.io/ERC721A/#/erc721a?id=_mint
         _safeMint(_msgSender(), quantity);
         _setAux(_msgSender(), transactions); // Update number of transactions
     }
-
-
 
 
     // public

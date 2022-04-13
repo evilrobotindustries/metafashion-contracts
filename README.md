@@ -15,6 +15,7 @@
     - Max mints per transaction:      5
 - Withdrawal
     - Single withdrawal address vs multiple, based on pre-defined split?
+- License?
 
 ## Assumptions:
 - Sequential: Token identifiers should be sequential (i.e. a max VIP batch mint would result in tokens 100,101,102 being issued). Noted here due to the proposed ERC721 implementation below. 

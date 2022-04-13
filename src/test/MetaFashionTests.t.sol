@@ -26,18 +26,6 @@ contract MetaFashionTests is Test  {
         assertEq(string(abi.encodePacked(_URI, "1")), _contract.tokenURI(1));
     }
 
-    function testPublicMint() public {
-        _contract.publicMint(1);
-    }
-
-    function testVIPMint() public {
-        _contract.setContractStatus(MetaFashion.ContractStatus.VIPOnly);
-        bytes32[] memory proof = new bytes32[](1);
-        proof[0] = bytes32(bytes("as9d87sad98as7d98sa7d"));
-        _contract.vipMint(1, proof);
-    }
-
-
     function testTokenIdStartsAtOne() public {
         // Mint the first token
         assertEq(0, _contract.totalSupply());
@@ -50,5 +38,4 @@ contract MetaFashionTests is Test  {
         // Ensure token 1 does
         assertEq(address(this), _contract.ownerOf(1));
     }
-
 }
