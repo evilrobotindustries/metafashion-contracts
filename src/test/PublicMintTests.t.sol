@@ -13,7 +13,7 @@ contract PublicMintTests is Test  {
     }
 
     function testCannotMintUntilPublicMintActive() public {
-        _contract.setPhase(MetaFashion.Phase.Paused);
+        _contract.setPhase(MetaFashion.Phase.NotStarted);
 
         _cheatCodes.expectRevert(PublicMintInactive.selector);
         _contract.publicMint(1);

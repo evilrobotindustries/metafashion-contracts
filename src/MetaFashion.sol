@@ -20,7 +20,7 @@ error VIPMintInactive();
 contract MetaFashion is ERC721A, ERC721ABurnable, Pausable, Ownable {
 
     enum Phase {
-        Paused,
+        NotStarted,
         VIP,
         Public
     }
@@ -40,7 +40,7 @@ contract MetaFashion is ERC721A, ERC721ABurnable, Pausable, Ownable {
     /// @notice The VIP mint price.
     uint256 private constant _VIP_PRICE = 0.075 ether;
 
-    Phase private _phase = Phase.Paused;
+    Phase private _phase = Phase.NotStarted;
     string private _tokenBaseURI;
     bytes32 private _vipMerkleRoot;
     
