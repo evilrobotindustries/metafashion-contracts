@@ -7,32 +7,40 @@ import "openzeppelin-contracts/contracts/access/Ownable.sol";
 import "openzeppelin-contracts/contracts/security/Pausable.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/MerkleProof.sol";
 
-error TestError();
-error VIPMintInactive();
+error IncorrectValue();
+error MintingPaused();
 error NotVIP();
+error PublicMintInactive();
+error InsufficientSupply();
 error TransactionMintLimitExceeded();
 error TransactionLimitExceeded();
-error MintingPaused();
+error VIPMintInactive();
+
 
 contract MetaFashion is ERC721A, ERC721ABurnable, Pausable, Ownable {
 
-    enum ContractStatus {
+    enum Phase {
         Paused,
-        VIPOnly,
+        VIP,
         Public
     }
 
     // state variables
 
-    /// @notice The maximum number of mints per transaction.
+    /// @notice The total collection size.
+    uint16 private constant _COLLECTION_SIZE = 10000;
+    /// @notice The maximum number of public mints per transaction.
     uint8 private constant _PUBLIC_MAX_MINT = 5;
+    /// @notice The maximum number of public transactions per address.
     uint8 private constant _PUBLIC_MAX_TRANSACTIONS = 3;
+    /// @notice The public mint price.
     uint256 private constant _PUBLIC_PRICE = 0.085 ether;
+    /// @notice The maximum number of VIP mints.
     uint8 private constant _VIP_MAX_MINT = 3;
-    uint8 private constant _VIP_MAX_TRANSACTIONS = 1;
+    /// @notice The VIP mint price.
     uint256 private constant _VIP_PRICE = 0.075 ether;
 
-    ContractStatus private _status = ContractStatus.Paused;
+    Phase private _phase = Phase.Paused;
     string private _tokenBaseURI;
     bytes32 private _vipMerkleRoot;
     
@@ -41,7 +49,13 @@ contract MetaFashion is ERC721A, ERC721ABurnable, Pausable, Ownable {
     // modifiers
     modifier whenVIP() {
         // TODO
-        if (_status != ContractStatus.VIPOnly) revert VIPMintInactive();
+        if (_phase != Phase.VIP) revert VIPMintInactive();
+        _;
+    }
+
+    modifier whenPublic() {
+        // TODO
+        if (_phase != Phase.Public) revert PublicMintInactive();
         _;
     }
 
@@ -57,14 +71,16 @@ contract MetaFashion is ERC721A, ERC721ABurnable, Pausable, Ownable {
 
     function vipMint(uint8 quantity, bytes32[] calldata proof) external payable whenNotPaused whenVIP {
         if (quantity > _VIP_MAX_MINT) revert TransactionMintLimitExceeded();
+        if (msg.value != quantity * _VIP_PRICE) revert IncorrectValue();
+        if (_totalMinted() + quantity > _COLLECTION_SIZE) revert InsufficientSupply();
+        
         // Validate VIP eligibility
         if (
             !MerkleProof.verify(
             proof,
             _vipMerkleRoot,
             keccak256(abi.encodePacked(_msgSender()))
-        )
-        ) revert NotVIP();
+        )) revert NotVIP();
 
         // VIP mint limited to a single transaction, so check if any minted
         uint256 minted = _numberMinted(_msgSender());
@@ -75,8 +91,11 @@ contract MetaFashion is ERC721A, ERC721ABurnable, Pausable, Ownable {
         _safeMint(_msgSender(), quantity);
     }
 
-    function publicMint(uint8 quantity) external payable whenNotPaused {
+    function publicMint(uint8 quantity) external payable whenNotPaused whenPublic {
         if (quantity > _PUBLIC_MAX_MINT) revert TransactionMintLimitExceeded();
+        if (msg.value != quantity * _PUBLIC_PRICE) revert IncorrectValue();
+        if (_totalMinted() + quantity > _COLLECTION_SIZE) revert InsufficientSupply();
+
         // Check public transaction limit
         uint64 transactions = _getAux(_msgSender()) + 1;
         if (transactions > _PUBLIC_MAX_TRANSACTIONS)
@@ -103,8 +122,16 @@ contract MetaFashion is ERC721A, ERC721ABurnable, Pausable, Ownable {
         _tokenBaseURI = uri;
     }
 
-    function setContractStatus(ContractStatus status) public onlyOwner {
-        _status = status;
+    function setPhase(Phase phase) public onlyOwner {
+        _phase = phase;
+    }
+
+    function setVIPMerkleRoot(bytes32 merkleRoot) public onlyOwner {
+        _vipMerkleRoot = merkleRoot;
+    }
+
+    function withdraw() public onlyOwner {
+        // todo
     }
 
     // internal

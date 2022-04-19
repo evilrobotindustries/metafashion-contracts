@@ -8,18 +8,24 @@ contract BurnableTests is Test {
 
     using Strings for uint256;
 
+    uint256 private constant _PRICE = 0.085 ether;
+
     function setUp() public {
         _contract.unpause();
+        _contract.setPhase(MetaFashion.Phase.Public);
     }
 
     /// @dev Use forge fuzz testing to test using random addresses
     function testOwnerCanBurnToken(uint160 mintAddress) public {
         _cheatCodes.assume(mintAddress > 0); // Zero address cannot mint
-        _cheatCodes.startPrank(address(mintAddress));
+
+        address addr = address(mintAddress);
+        _cheatCodes.deal(addr, _PRICE);
+        _cheatCodes.startPrank(addr);
 
         // Mint token for address and then burn
         assertEq(0, _contract.totalSupply());
-        _contract.publicMint(1);
+        _contract.publicMint{value: _PRICE }(1);
         assertEq(1, _contract.totalSupply());
         _contract.burn(1);
         assertEq(0, _contract.totalSupply());
@@ -31,8 +37,10 @@ contract BurnableTests is Test {
         _cheatCodes.assume(mintAddress != anotherAddress); // Testing when addresses are different so exclude when same
 
         // Mint as supplied address
-        _cheatCodes.prank(address(mintAddress));
-        _contract.publicMint(1);
+        address addr = address(mintAddress);
+        _cheatCodes.deal(addr, _PRICE);
+        _cheatCodes.prank(addr);
+        _contract.publicMint{value: _PRICE }(1);
 
         // Attempt to burn when not owner
         _cheatCodes.prank(address(anotherAddress));

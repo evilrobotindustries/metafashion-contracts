@@ -7,8 +7,8 @@ import "../MetaFashion.sol";
 
 abstract contract Test is DSTest, IERC721Receiver {
     string internal constant _URI = "https://metafashionhq.io/";
-    bytes32 private constant _VIP_MERKLE_ROOT = 
-        bytes32(bytes("b90c58b99228b1eaec8a7bda81525372c7cfb225c12a85331dde5afce7a7ee63"));
+    bytes32 internal constant _VIP_MERKLE_ROOT = 
+        0x7c9a6bf3de43ef03c24f3fffbe0a5a52057670d5f03702b6d753b13f4a584451;
 
     MetaFashion internal _contract = new MetaFashion(_VIP_MERKLE_ROOT);
     CheatCodes internal _cheatCodes = CheatCodes(HEVM_ADDRESS);
