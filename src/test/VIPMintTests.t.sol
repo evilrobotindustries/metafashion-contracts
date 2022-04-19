@@ -86,7 +86,13 @@ contract VIPMintTests is Test  {
         _contract.vipMint{value: 3 * _PRICE}(3, proof);
     }
 
-    function testMint() public {
+    function testMint1() public { mint(1); }
+
+    function testMint2() public { mint(2); }
+
+    function testMint3() public { mint(3); }
+
+    function mint(uint8 quantity) public {
         address addr = address(1);
         emit log_address(addr);
         emit log_bytes32(keccak256(abi.encodePacked(addr)));
@@ -96,14 +102,14 @@ contract VIPMintTests is Test  {
         proof[1] = 0xd52688a8f926c816ca1e079067caba944f158e764817b83fc43594370ca9cf62;
 
         // Fund address and mint max
-        uint256 value = 3 * _PRICE;
+        uint256 value = quantity * _PRICE;
         _cheatCodes.deal(addr, value);
         _cheatCodes.prank(addr);
-        _contract.vipMint{value: value}(3, proof);
+        _contract.vipMint{value: value}(quantity, proof);
         assertEq(addr.balance, 0);
 
         // Ensure contract updated
-        assertEq(_contract.totalSupply(), 3);
+        assertEq(_contract.totalSupply(), quantity);
         assertEq(address(_contract).balance, value);
     }
 }

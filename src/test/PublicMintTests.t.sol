@@ -66,21 +66,36 @@ contract PublicMintTests is Test  {
     }
 
     /// @dev Use forge fuzz testing to test using random addresses
-    function testMaxPublicMint(uint160 mintAddress) public {
+    function testMint1(uint160 mintAddress) public { mint(mintAddress, 1); }
+
+    /// @dev Use forge fuzz testing to test using random addresses
+    function testMint2(uint160 mintAddress) public { mint(mintAddress, 2); }
+
+    /// @dev Use forge fuzz testing to test using random addresses
+    function testMint3(uint160 mintAddress) public { mint(mintAddress, 3); }
+
+    /// @dev Use forge fuzz testing to test using random addresses
+    function testMint4(uint160 mintAddress) public { mint(mintAddress, 4); }
+
+    /// @dev Use forge fuzz testing to test using random addresses
+    function testMint5(uint160 mintAddress) public { mint(mintAddress, 5); }
+
+    /// @dev Use forge fuzz testing to test using random addresses
+    function mint(uint160 mintAddress, uint8 quantity) public {
         _cheatCodes.assume(mintAddress > 0); // Zero address cannot mint
 
         // Fund address
         address addr = address(mintAddress);
-        _cheatCodes.deal(addr, 5 * _PRICE); 
+        _cheatCodes.deal(addr, quantity * _PRICE); 
         
         // Mint as address, sending required value and checking balance
         _cheatCodes.prank(addr);
-        uint256 value = 5 * _PRICE;
-        _contract.publicMint{value: value}(5);
+        uint256 value = quantity * _PRICE;
+        _contract.publicMint{value: value}(quantity);
         assertEq(addr.balance, 0);
 
         // Ensure contract updated
-        assertEq(_contract.totalSupply(), 5);
+        assertEq(_contract.totalSupply(), quantity);
         assertEq(address(_contract).balance, value);
     }
 
