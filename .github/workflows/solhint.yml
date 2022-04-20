@@ -11,9 +11,8 @@ jobs:
         with:
           submodules: recursive
       
-      - uses: bahmutov/npm-install@v1
-        with:
-          install-command: npm install solhint -g
+      - name: Install solhint
+        run: npm install solhint -g
 
       - name: Run solhint
         run: solhint 'src/**/*.sol'
