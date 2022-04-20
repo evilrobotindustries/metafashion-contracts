@@ -12,7 +12,6 @@ pragma solidity 0.8.10;
 // ⢸⣿⣿⣿⡟⠀⡀⠀⠸⣿⣿⣿⣿⣦⣾⣿⣿⡿⠏⠐⢿⣿⣿⣿⣦⣾⣿⣿⡿⠇⢰⣿⣿⣿⡟⠀⢸⣿⣿⣿⡟⠀⣿⣿⣿⣿⠁⠸⣿⣿⣿⣷⣤⣾⣿⣿⡿⠃⢰⣿⣿⣿⡿⠀⢸⣿⣿⣿⡟⠀
 // ⣾⣿⣿⣿⠃⢰⣿⣦⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⠀⠀
 
-
 import "ERC721A/ERC721A.sol";
 import "ERC721A/extensions/ERC721ABurnable.sol";
 import "ERC721A/extensions/ERC721APausable.sol";
