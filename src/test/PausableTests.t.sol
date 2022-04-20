@@ -38,9 +38,23 @@ contract PausableTests is Test {
         _contract.unpause();
     }
 
-//    function testCannotTransferTokenWhenPaused() public {
-//        address a = address(1);
-//        address b = address(2);
-//        _contract.transferFrom(a, b, 1);
-//    }
+   function testCannotTransferTokenWhenPaused() public {
+
+        assertTrue(_contract.paused());
+        _contract.unpause();
+        _contract.setPhase(MetaFashion.Phase.Public); // Enable public to mint a token for transfer
+
+        address a = address(1);
+        _cheatCodes.deal(a, 0.085 ether);
+        _cheatCodes.prank(a);
+        _contract.publicMint{value: 0.085 ether}(1);
+
+        _contract.pause();
+        assertTrue(_contract.paused());
+
+        address b = address(2);
+        _cheatCodes.prank(a);
+        _cheatCodes.expectRevert(ContractPaused.selector);
+        _contract.transferFrom(a, b, 1);
+   }
 }

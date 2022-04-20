@@ -3,8 +3,8 @@ pragma solidity 0.8.10;
 
 import "ERC721A/ERC721A.sol";
 import "ERC721A/extensions/ERC721ABurnable.sol";
+import "ERC721A/extensions/ERC721APausable.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
-import "openzeppelin-contracts/contracts/security/Pausable.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/MerkleProof.sol";
 
 error IncorrectValue();
@@ -17,10 +17,10 @@ error TransactionLimitExceeded();
 error VIPMintInactive();
 
 
-contract MetaFashion is ERC721A, ERC721ABurnable, Pausable, Ownable {
+contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable {
 
     enum Phase {
-        NotStarted,
+        None,
         VIP,
         Public
     }
@@ -40,7 +40,7 @@ contract MetaFashion is ERC721A, ERC721ABurnable, Pausable, Ownable {
     /// @notice The VIP mint price.
     uint256 private constant _VIP_PRICE = 0.075 ether;
 
-    Phase private _phase = Phase.NotStarted;
+    Phase private _phase = Phase.None;
     string private _tokenBaseURI;
     bytes32 private _vipMerkleRoot;
     
@@ -48,14 +48,27 @@ contract MetaFashion is ERC721A, ERC721ABurnable, Pausable, Ownable {
 
     // modifiers
     modifier whenVIP() {
-        // TODO
         if (_phase != Phase.VIP) revert VIPMintInactive();
         _;
     }
 
     modifier whenPublic() {
-        // TODO
         if (_phase != Phase.Public) revert PublicMintInactive();
+        _;
+    }
+
+    modifier whenWithinTransactionLimit(uint8 quantity, uint8 maxMint) {
+        if (quantity > maxMint) revert TransactionMintLimitExceeded();
+        _;
+    }
+
+    modifier whenCorrectValueSent(uint8 quantity, uint256 price) {
+        if (msg.value != quantity * price) revert IncorrectValue();
+        _;
+    }
+
+    modifier whenSufficientSupply(uint8 quantity) {
+        if (_totalMinted() + quantity > _COLLECTION_SIZE) revert InsufficientSupply();
         _;
     }
 
@@ -69,11 +82,13 @@ contract MetaFashion is ERC721A, ERC721ABurnable, Pausable, Ownable {
 
     // external
 
-    function vipMint(uint8 quantity, bytes32[] calldata proof) external payable whenNotPaused whenVIP {
-        if (quantity > _VIP_MAX_MINT) revert TransactionMintLimitExceeded();
-        if (msg.value != quantity * _VIP_PRICE) revert IncorrectValue();
-        if (_totalMinted() + quantity > _COLLECTION_SIZE) revert InsufficientSupply();
-        
+    function vipMint(uint8 quantity, bytes32[] calldata proof) external payable 
+        whenNotPaused
+        whenVIP
+        whenWithinTransactionLimit(quantity, _VIP_MAX_MINT)
+        whenCorrectValueSent(quantity, _VIP_PRICE)
+        whenSufficientSupply(quantity) {
+
         // Validate VIP eligibility
         if (
             !MerkleProof.verify(
@@ -91,10 +106,12 @@ contract MetaFashion is ERC721A, ERC721ABurnable, Pausable, Ownable {
         _safeMint(_msgSender(), quantity);
     }
 
-    function publicMint(uint8 quantity) external payable whenNotPaused whenPublic {
-        if (quantity > _PUBLIC_MAX_MINT) revert TransactionMintLimitExceeded();
-        if (msg.value != quantity * _PUBLIC_PRICE) revert IncorrectValue();
-        if (_totalMinted() + quantity > _COLLECTION_SIZE) revert InsufficientSupply();
+    function publicMint(uint8 quantity) external payable 
+        whenNotPaused
+        whenPublic
+        whenWithinTransactionLimit(quantity, _PUBLIC_MAX_MINT)
+        whenCorrectValueSent(quantity, _PUBLIC_PRICE)
+        whenSufficientSupply(quantity) {
 
         // Check public transaction limit
         uint64 transactions = _getAux(_msgSender()) + 1;
@@ -138,6 +155,15 @@ contract MetaFashion is ERC721A, ERC721ABurnable, Pausable, Ownable {
 
     function _baseURI() internal view override returns (string memory) {
         return _tokenBaseURI;
+    }
+
+    function _beforeTokenTransfers(
+        address from,
+        address to,
+        uint256 startTokenId,
+        uint256 quantity
+    ) internal virtual override(ERC721A, ERC721APausable) {
+        super._beforeTokenTransfers(from, to, startTokenId, quantity);
     }
 
     function _startTokenId() internal pure override returns (uint256) {

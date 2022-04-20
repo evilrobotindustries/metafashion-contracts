@@ -18,11 +18,4 @@ contract MerkleTests is DSTest {
 
       assertTrue(MerkleProof.verify(proof, root, leaf));
    }
-
-   function testAddresses() public {
-      address a = address(1);
-      bytes32 leaf = keccak256(abi.encodePacked(a));
-
-      emit log_bytes32(leaf);
-   }
 }

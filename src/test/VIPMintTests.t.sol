@@ -13,7 +13,7 @@ contract VIPMintTests is Test  {
     }
 
     function testCannotMintWhenVIPMintingInactive() public {
-        _contract.setPhase(MetaFashion.Phase.Paused);
+        _contract.setPhase(MetaFashion.Phase.None);
 
         _cheatCodes.expectRevert(VIPMintInactive.selector);
         _contract.vipMint(1, new bytes32[](0));
