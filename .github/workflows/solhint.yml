@@ -1,0 +1,19 @@
+on: [push]
+
+name: solhint
+
+jobs:
+  check:
+    name: Solhint security and style guide validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Install solhint
+        uses: bahmutov/npm-install@v1
+        run: npm install solhint -g
+
+      - name: Run solhint
+        run: solhint 'src/**/*.sol'

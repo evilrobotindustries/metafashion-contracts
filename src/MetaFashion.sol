@@ -28,21 +28,22 @@ contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable {
     // state variables
 
     /// @notice The total collection size.
-    uint16 private constant _COLLECTION_SIZE = 10000;
+    uint256 private constant _COLLECTION_SIZE = 10000;
     /// @notice The maximum number of public mints per transaction.
-    uint8 private constant _PUBLIC_MAX_MINT = 5;
+    uint256 private constant _PUBLIC_MAX_MINT = 5;
     /// @notice The maximum number of public transactions per address.
-    uint8 private constant _PUBLIC_MAX_TRANSACTIONS = 3;
+    uint256 private constant _PUBLIC_MAX_TRANSACTIONS = 3;
     /// @notice The public mint price.
     uint256 private constant _PUBLIC_PRICE = 0.085 ether;
     /// @notice The maximum number of VIP mints.
-    uint8 private constant _VIP_MAX_MINT = 3;
+    uint256 private constant _VIP_MAX_MINT = 3;
     /// @notice The VIP mint price.
     uint256 private constant _VIP_PRICE = 0.075 ether;
 
+    bytes32 private _vipMerkleRoot;
     Phase private _phase = Phase.None;
     string private _tokenBaseURI;
-    bytes32 private _vipMerkleRoot;
+
     
     // events
 
@@ -57,17 +58,17 @@ contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable {
         _;
     }
 
-    modifier whenWithinTransactionLimit(uint8 quantity, uint8 maxMint) {
+    modifier whenQuantityWithinMintLimit(uint256 quantity, uint256 maxMint) {
         if (quantity > maxMint) revert TransactionMintLimitExceeded();
         _;
     }
 
-    modifier whenCorrectValueSent(uint8 quantity, uint256 price) {
+    modifier whenCorrectValueSent(uint256 quantity, uint256 price) {
         if (msg.value != quantity * price) revert IncorrectValue();
         _;
     }
 
-    modifier whenSufficientSupply(uint8 quantity) {
+    modifier whenSufficientSupply(uint256 quantity) {
         if (_totalMinted() + quantity > _COLLECTION_SIZE) revert InsufficientSupply();
         _;
     }
@@ -75,23 +76,23 @@ contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable {
     // constructor
 
     constructor(bytes32 vipMerkleRoot) ERC721A("MetaFashion", "MFHQ") {
-
         _vipMerkleRoot = vipMerkleRoot;
         pause(); // Pause until explicitly enabled
     }
 
     // external
 
-    function vipMint(uint8 quantity, bytes32[] calldata proof) external payable 
+    function vipMint(uint256 quantity, bytes32[] calldata proof) 
+        external 
+        payable 
         whenNotPaused
         whenVIP
-        whenWithinTransactionLimit(quantity, _VIP_MAX_MINT)
+        whenQuantityWithinMintLimit(quantity, _VIP_MAX_MINT)
         whenCorrectValueSent(quantity, _VIP_PRICE)
-        whenSufficientSupply(quantity) {
-
+        whenSufficientSupply(quantity) 
+    {
         // Validate VIP eligibility
-        if (
-            !MerkleProof.verify(
+        if (!MerkleProof.verify(
             proof,
             _vipMerkleRoot,
             keccak256(abi.encodePacked(_msgSender()))
@@ -106,13 +107,15 @@ contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable {
         _safeMint(_msgSender(), quantity);
     }
 
-    function publicMint(uint8 quantity) external payable 
+    function publicMint(uint8 quantity) 
+        external 
+        payable 
         whenNotPaused
         whenPublic
-        whenWithinTransactionLimit(quantity, _PUBLIC_MAX_MINT)
+        whenQuantityWithinMintLimit(quantity, _PUBLIC_MAX_MINT)
         whenCorrectValueSent(quantity, _PUBLIC_PRICE)
-        whenSufficientSupply(quantity) {
-
+        whenSufficientSupply(quantity) 
+    {
         // Check public transaction limit
         uint64 transactions = _getAux(_msgSender()) + 1;
         if (transactions > _PUBLIC_MAX_TRANSACTIONS)
@@ -153,10 +156,6 @@ contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable {
 
     // internal
 
-    function _baseURI() internal view override returns (string memory) {
-        return _tokenBaseURI;
-    }
-
     function _beforeTokenTransfers(
         address from,
         address to,
@@ -164,6 +163,10 @@ contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable {
         uint256 quantity
     ) internal virtual override(ERC721A, ERC721APausable) {
         super._beforeTokenTransfers(from, to, startTokenId, quantity);
+    }
+
+    function _baseURI() internal view override returns (string memory) {
+        return _tokenBaseURI;
     }
 
     function _startTokenId() internal pure override returns (uint256) {
