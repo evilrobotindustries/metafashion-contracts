@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.10;
+pragma solidity 0.8.9;
 
 import "./Test.t.sol";
 
@@ -14,7 +14,7 @@ contract MetaFashionTests is Test  {
     }
 
     function testSymbol() public {
-        assertEq("MFHQ", _contract.symbol());
+        assertEq("MFT", _contract.symbol());
     }
 
     function testSetBaseURI() public {
@@ -27,20 +27,39 @@ contract MetaFashionTests is Test  {
         assertEq(string(abi.encodePacked(_URI, "1")), _contract.tokenURI(1));
     }
 
-    function testTokenIdStartsAtOne() public {
-        // Mint the first token
-        assertEq(0, _contract.totalSupply());
+    function testSetCollectionSize() public {
+        // Reduce collection size to one less than max transaction mint
+        _contract.setCollectionSize(4);
+
+        // Attempt to mint more than collection size
         _contract.setPhase(MetaFashion.Phase.Public);
-        _contract.publicMint{value: 0.085 ether }(1);
-
-        // Ensure token 0 does not exist
-        _cheatCodes.expectRevert(OwnerQueryForNonexistentToken.selector);
-        _contract.ownerOf(0);
-
-        // Ensure token 1 does
-        assertEq(address(this), _contract.ownerOf(1));
+        _cheatCodes.expectRevert(InsufficientSupply.selector);
+        _contract.publicMint{value: 5 * 0.085 ether }(5);
     }
 
+    function testCannotReduceCollectionSizeLowerThanMinted() public {
+        _contract.setPhase(MetaFashion.Phase.Public);
+        _contract.publicMint{value: 5 * 0.085 ether }(5);
+        assertEq(_contract.totalSupply(), 5);
+
+        // Attempt to reduce the collection size to size lower than minted
+        _cheatCodes.expectRevert(InvalidCollectionSize.selector);
+        _contract.setCollectionSize(4);
+
+        // Set to current size and then check mint attempt fails
+        _contract.setCollectionSize(_contract.totalSupply());
+        _cheatCodes.expectRevert(InsufficientSupply.selector);
+        _contract.publicMint{value: 0.085 ether }(1);
+    }
+
+    function testZeroCollectionSize() public {
+        _contract.setCollectionSize(0);
+
+        // Attempt to mint more than collection size
+        _contract.setPhase(MetaFashion.Phase.Public);
+        _cheatCodes.expectRevert(InsufficientSupply.selector);
+        _contract.publicMint{value: 0.085 ether }(1);
+    }
 
     function testSetPhaseAsPublic() public {
 
@@ -95,5 +114,54 @@ contract MetaFashionTests is Test  {
         _contract.setVIPMerkleRoot(root);
         _cheatCodes.prank(addr);
         _contract.vipMint{value: value}(1, new bytes32[](0));
+    }
+
+    function testWithdrawal(uint256 balance) public {
+        _cheatCodes.assume(balance > 0.1 ether && balance < 10000 ether);
+
+        emit log_uint(balance);
+        _cheatCodes.deal(address(_contract), balance);
+        assertEq(address(_contract).balance, balance);
+
+        _contract.withdraw();
+
+        assertEq(address(_contract.COMMUNITY_WALLET()).balance, (balance * 550/1000));
+        emit log_uint(address(_contract.COMMUNITY_WALLET()).balance);
+
+        assertEq(address(_contract.METAFASHIONHQ_WALLET()).balance, (balance * 450/1000));
+        emit log_uint(address(_contract.METAFASHIONHQ_WALLET()).balance);
+
+        assertTrue(address(_contract).balance < 2);
+        emit log_uint(address(_contract).balance);
+    }
+
+    function testWithdrawalOfLargeAmountOfEther() public {
+        uint256 balance = 128937129831317239721212937129392948247498749385873862487691272328387618361;
+        _cheatCodes.deal(address(_contract), balance);
+        assertEq(address(_contract).balance, balance);
+
+        _contract.withdraw();
+
+        assertEq(
+            address(_contract.COMMUNITY_WALLET()).balance, 
+            70915421407224481846667115421166121536124312162230624368230199780613190098);
+        assertEq(
+            address(_contract.METAFASHIONHQ_WALLET()).balance, 
+            58021708424092757874545821708226826711374437223643238119461072547774428262);
+        assertEq(address(_contract).balance, 1); // 1 wei remainder
+    }
+
+    function testTokenIdStartsAtOne() public {
+        // Mint the first token
+        assertEq(0, _contract.totalSupply());
+        _contract.setPhase(MetaFashion.Phase.Public);
+        _contract.publicMint{value: 0.085 ether }(1);
+
+        // Ensure token 0 does not exist
+        _cheatCodes.expectRevert(OwnerQueryForNonexistentToken.selector);
+        _contract.ownerOf(0);
+
+        // Ensure token 1 does
+        assertEq(address(this), _contract.ownerOf(1));
     }
 }

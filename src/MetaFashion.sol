@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.10;
+pragma solidity 0.8.9;
 
 // ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣀⡀⣀⣀⣀⡀⢀⣀⣀⣀⣀⠀⠀⠀⣀⣀⣀⣀⣀⣀⣀⣀⡀⠀⢰⣿⣿⣿⣇⣀⣀⣀⣀⣀⠀⠀⢀⣀⣀⣀⣀⣀⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 // ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⡟⠙⣿⣿⡿⠋⢻⣿⣿⣿⡇⢀⣿⣿⣿⣿⠋⢻⣿⣿⣿⣿⠀⣿⣿⣿⣿⠛⠛⠛⠛⠛⠛⠀⣰⣿⣿⣿⠟⠙⣿⣿⣿⣿⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -15,10 +15,13 @@ pragma solidity 0.8.10;
 import "ERC721A/ERC721A.sol";
 import "ERC721A/extensions/ERC721ABurnable.sol";
 import "ERC721A/extensions/ERC721APausable.sol";
-import "openzeppelin-contracts/contracts/access/Ownable.sol";
-import "openzeppelin-contracts/contracts/utils/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 error IncorrectValue();
+error InvalidCollectionSize();
 error MintingPaused();
 error NotVIP();
 error PublicMintInactive();
@@ -27,8 +30,7 @@ error TransactionMintLimitExceeded();
 error TransactionLimitExceeded();
 error VIPMintInactive();
 
-
-contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable {
+contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable, ReentrancyGuard {
 
     enum Phase {
         None,
@@ -38,8 +40,9 @@ contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable {
 
     // state variables
 
-    /// @notice The total collection size.
-    uint256 private constant _COLLECTION_SIZE = 10000;
+    address public constant COMMUNITY_WALLET = address(12345);
+    address public constant METAFASHIONHQ_WALLET = address(54321);
+
     /// @notice The maximum number of public mints per transaction.
     uint256 private constant _PUBLIC_MAX_MINT = 5;
     /// @notice The maximum number of public transactions per address.
@@ -51,10 +54,10 @@ contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable {
     /// @notice The VIP mint price.
     uint256 private constant _VIP_PRICE = 0.075 ether;
 
-    bytes32 private _vipMerkleRoot;
-    Phase private _phase = Phase.None;
-    string private _tokenBaseURI;
-
+    bytes32 private _vipMerkleRoot; // Merkle root for validating VIP addresses
+    string private _tokenBaseURI; // Base URI for tokens
+    uint256 private _collectionSize = 10000; // The total collection size.
+    Phase private _phase = Phase.None; // The current phase
     
     // events
 
@@ -80,15 +83,16 @@ contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable {
     }
 
     modifier whenSufficientSupply(uint256 quantity) {
-        if (_totalMinted() + quantity > _COLLECTION_SIZE) revert InsufficientSupply();
+        if (_totalMinted() + quantity > _collectionSize) revert InsufficientSupply();
         _;
     }
 
     // constructor
 
-    constructor(bytes32 vipMerkleRoot) ERC721A("MetaFashion", "MFHQ") {
+    constructor(bytes32 vipMerkleRoot, string memory tokenBaseURI) ERC721A("MetaFashion", "MFT") {
         _vipMerkleRoot = vipMerkleRoot;
-        pause(); // Pause until explicitly enabled
+        _tokenBaseURI = tokenBaseURI;
+        _pause(); // Pause until explicitly enabled
     }
 
     // external
@@ -138,32 +142,49 @@ contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable {
         _setAux(_msgSender(), transactions); // Update number of transactions
     }
 
+    function giveawayMint() external onlyOwner whenNotPaused whenVIP whenSufficientSupply(100) {
+        // Giveaway mint limited to a single transaction, so check if any minted
+        uint256 minted = _numberMinted(COMMUNITY_WALLET);
+        if (minted > 0) revert TransactionLimitExceeded();
 
-    // public
+        // Safe minting is reentrant safe and doubles as an gas-optimized reentrancy guard since V3
+        // https://chiru-labs.github.io/ERC721A/#/erc721a?id=_mint
+        _safeMint(COMMUNITY_WALLET, 100);
+    }
 
-    function pause() public onlyOwner {
+    function pause() external onlyOwner {
         _pause();
     }
 
-    function unpause() public onlyOwner {
-        _unpause();
-    }
-
-    function setBaseURI(string calldata uri) public onlyOwner {
+    function setBaseURI(string calldata uri) external onlyOwner {
         _tokenBaseURI = uri;
     }
 
-    function setPhase(Phase phase) public onlyOwner {
+    function setCollectionSize(uint256 size) external onlyOwner {
+        if (size < _totalMinted()) revert InvalidCollectionSize();
+        _collectionSize = size;
+    }
+
+    function setPhase(Phase phase) external onlyOwner {
         _phase = phase;
     }
 
-    function setVIPMerkleRoot(bytes32 merkleRoot) public onlyOwner {
+    function setVIPMerkleRoot(bytes32 merkleRoot) external onlyOwner {
         _vipMerkleRoot = merkleRoot;
     }
 
-    function withdraw() public onlyOwner {
-        // todo
+    function unpause() external onlyOwner {
+        _unpause();
     }
+
+    function withdraw() external onlyOwner nonReentrant {
+        uint256 balance = address(this).balance;
+
+        Address.sendValue(payable(COMMUNITY_WALLET), balance * 550/1000);
+        Address.sendValue(payable(METAFASHIONHQ_WALLET), balance * 450/1000);
+    }
+
+    // public
 
     // internal
 

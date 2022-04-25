@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.10;
+pragma solidity 0.8.9;
 
 import "./Test.t.sol";
 import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
@@ -17,7 +17,8 @@ contract BurnableTests is Test {
 
     /// @dev Use forge fuzz testing to test using random addresses
     function testOwnerCanBurnToken(uint160 mintAddress) public {
-        _cheatCodes.assume(mintAddress > 0); // Zero address cannot mint
+        // Zero and contract address cannot mint
+        _cheatCodes.assume(mintAddress > 0 && mintAddress != uint160(address(_contract))); 
 
         address addr = address(mintAddress);
         _cheatCodes.deal(addr, _PRICE);
@@ -34,6 +35,10 @@ contract BurnableTests is Test {
     /// @dev Use forge fuzz testing to test using random addresses
     function testCannotBurnWhenNotOwner(uint160 mintAddress, uint160 anotherAddress) public {
         _cheatCodes.assume(mintAddress > 0 && anotherAddress > 0); // Zero address cannot mint
+        // contract address cannot mint
+        _cheatCodes.assume(
+            mintAddress != uint160(address(_contract)) && 
+            anotherAddress != uint160(address(_contract))); 
         _cheatCodes.assume(mintAddress != anotherAddress); // Testing when addresses are different so exclude when same
 
         // Mint as supplied address
