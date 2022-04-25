@@ -1,6 +1,6 @@
 on: [push]
 
-name: test
+name: Forge Tests
 
 jobs:
   check:

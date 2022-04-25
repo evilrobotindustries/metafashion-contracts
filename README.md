@@ -36,7 +36,9 @@ Finally, [OpenZeppelin](https://openzeppelin.com) libraries are to be  used in a
 ### Testing
 All smart contract functionality will be fully tested using the [forge](https://github.com/gakonst/foundry/tree/master/forge) testing framework. Tests are written in Solidity. The current status of tests can be seen below. 
 
-[![Tests](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/foundry-tests.yml/badge.svg)](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/foundry-tests.yml) [![solhint](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/solhint.yml/badge.svg)](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/solhint.yml)
+[![Forge Tests](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/foundry-tests.yml/badge.svg)](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/foundry-tests.yml) [![Solhint Security and Style Guide Validation](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/solhint.yml/badge.svg)](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/solhint.yml)
 
 ### Auditing
 The contract will be audited through automated testing tools such as MythX/Mythril, but a manual audit by a smart contract security professional must still be carried out. The current status of automated audits can be seen below. 
+
+[![Slither Analysis](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/slither.yml/badge.svg)](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/slither.yml)

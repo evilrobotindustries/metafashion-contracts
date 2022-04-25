@@ -1,6 +1,6 @@
 on: [push]
 
-name: solhint
+name: Solhint Security and Style Guide Validation
 
 jobs:
   check:
