@@ -11,7 +11,7 @@ jobs:
           submodules: recursive
 
       - name: Install Solidity Compiler
-        run: pip3 install solc-select && solc-select use 0.8.9
+        run: pip3 install solc-select && solc-select install 0.8.9
 
       - name: Install Slither Analyzer
         run: pip3 install slither-analyzer
