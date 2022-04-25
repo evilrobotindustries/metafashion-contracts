@@ -10,7 +10,14 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: crytic/slither-action@v0.1.1
-        with:
-          target: 'src/MetaFashion.sol'
-          slither-args:  '--solc-remaps "@openzeppelin/=lib/openzeppelin-contracts/ ERC721A/=lib/ERC721A/contracts/" --filter-paths lib/'
+      - name: Install Slither Analyzer
+        run: pip3 install slither-analyzer
+
+      - name: Start Analysis
+        run: slither src/MetaFashion.sol --solc-remaps '@openzeppelin/=lib/openzeppelin-contracts/ ERC721A/=lib/ERC721A/contracts/' --filter-paths lib
+
+      # https://github.com/crytic/slither-action/issues/3
+      # - uses: crytic/slither-action@v0.1.1
+      #   with:
+      #     target: 'src/MetaFashion.sol'
+      #     slither-args:  '--solc-remaps "@openzeppelin/=lib/openzeppelin-contracts/ ERC721A/=lib/ERC721A/contracts/" --filter-paths lib/'
