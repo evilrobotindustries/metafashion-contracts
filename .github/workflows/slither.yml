@@ -7,4 +7,5 @@ jobs:
       - uses: actions/checkout@v2
       - uses: crytic/slither-action@v0.1.1
         with:
+          ignore-compile: true
           slither-args:  'src/MetaFashion.sol --solc-remaps "@openzeppelin/=lib/openzeppelin-contracts/ ERC721A/=lib/ERC721A/contracts/" --filter-paths lib/'
