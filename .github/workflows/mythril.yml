@@ -1,0 +1,17 @@
+on: [push]
+
+name: Mythril Analysis
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Install Mythril
+        run: pip3 install mythril
+
+      - name: Start Analysis
+        run: myth analyze src/MetaFashion.sol --solc-json remappings.json --execution-timeout 60
