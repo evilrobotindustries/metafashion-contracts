@@ -33,12 +33,12 @@ The [ERC721A](https://www.erc721a.org) implementation developed by the the Azuki
 
 Finally, [OpenZeppelin](https://openzeppelin.com) libraries are to be  used in all other cases to maximise security. More information available at https://docs.openzeppelin.com/contracts/4.x/api/token/erc721 and https://github.com/OpenZeppelin/openzeppelin-contracts.
 
-### Testing
+## Testing
 All smart contract functionality will be fully tested using the [forge](https://github.com/gakonst/foundry/tree/master/forge) testing framework. Tests are written in Solidity. The current status of tests can be seen below. 
 
 [![Forge Tests](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/foundry-tests.yml/badge.svg)](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/foundry-tests.yml) [![Solhint Security and Style Guide Validation](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/solhint.yml/badge.svg)](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/solhint.yml)
 
-### Auditing
+## Auditing
 The contract will be audited through automated testing tools such as ConsenSys [MythX](https://mythx.io/)/[Mythril](https://github.com/ConsenSys/mythril) and [Slither](https://github.com/crytic/slither), but a manual audit by a smart contract security professional must still be carried out. The current status of automated audits can be seen below. 
 
 [![Mythril Analysis](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/mythril.yml/badge.svg)](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/mythril.yml) [![Slither Analysis](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/slither.yml/badge.svg)](https://github.com/evilrobotindustries/metafashion-contracts/actions/workflows/slither.yml)

@@ -18,3 +18,7 @@ jobs:
 
       - name: Run tests
         run: forge test -v
+
+      - name: Mint Costs
+        run: forge test --match-contract MintCosts --gas-report
+        
