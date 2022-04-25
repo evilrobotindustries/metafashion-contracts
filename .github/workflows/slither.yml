@@ -1,11 +1,16 @@
-name: Slither Analysis
 on: [push]
+
+name: Slither Analysis
+
 jobs:
   analyze:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: crytic/slither-action@v0.1.1
         with:
-          ignore-compile: true
-          slither-args:  'src/MetaFashion.sol --solc-remaps "@openzeppelin/=lib/openzeppelin-contracts/ ERC721A/=lib/ERC721A/contracts/" --filter-paths lib/'
+          submodules: recursive
+
+      - uses: crytic/slither-action@v0.1.1
+            with:
+              target: 'src/MetaFashion.sol'
+              slither-args:  '--solc-remaps "@openzeppelin/=lib/openzeppelin-contracts/ ERC721A/=lib/ERC721A/contracts/" --filter-paths lib/'

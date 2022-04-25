@@ -4,7 +4,6 @@ name: Solhint Security and Style Guide Validation
 
 jobs:
   check:
-    name: Solhint security and style guide validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
