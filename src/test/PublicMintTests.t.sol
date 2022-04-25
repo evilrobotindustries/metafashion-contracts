@@ -104,4 +104,34 @@ contract PublicMintTests is Test  {
         assertEq(_contract.totalSupply(), 15);
         assertEq(address(_contract).balance, 3 * value);
     }
+
+    function testMaxPublicMintAfterMaxVIPMint() public {
+
+        // Fund address
+        address addr = address(1);
+        _cheatCodes.deal(addr, (3 * 0.075 ether) + (3 * 5 * 0.085 ether));
+
+        // VIP mint max
+        _contract.setPhase(MetaFashion.Phase.VIP);
+        bytes32[] memory proof = new bytes32[](2);
+        proof[0] = 0x5b70e80538acdabd6137353b0f9d8d149f4dba91e8be2e7946e409bfdbe685b9;
+        proof[1] = 0xd52688a8f926c816ca1e079067caba944f158e764817b83fc43594370ca9cf62;
+        _cheatCodes.prank(addr);
+        _contract.vipMint{value: 3 * 0.075 ether}(3, proof);
+        assertEq(_contract.balanceOf(addr), 3);
+
+        // Public mint max
+        _contract.setPhase(MetaFashion.Phase.Public);
+        uint256 value = 5 * _PRICE;
+        _cheatCodes.startPrank(addr);
+        _contract.publicMint{value: value}(5);
+        _contract.publicMint{value: value}(5);
+        _contract.publicMint{value: value}(5);
+        assertEq(_contract.balanceOf(addr), 18);
+        assertEq(addr.balance, 0);
+
+        // Ensure contract updated
+        assertEq(_contract.totalSupply(), 18);
+        assertEq(address(_contract).balance, 3 * value + (3 * 0.075 ether));
+    }
 }
