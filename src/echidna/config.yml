@@ -1,3 +1,2 @@
 balanceContract: 1000000000000000000 # 1 eth
 prefix: "echidna"
-testLimit: 1000000 # 1 million

@@ -1,0 +1,22 @@
+on: [push]
+
+name: Echidna Analysis
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Install Echidna
+        # Use build with fix for reported issue until new version published 
+        run: wget -q -c https://nightly.link/crytic/echidna/actions/artifacts/224513612.zip && unzip -q 224513612.zip && tar xzf echidna-test.tar.gz && rm 224513612.zip  && rm echidna-test.tar.gz
+
+      # Property tests
+      - name: Fuzz owners
+        run: echidna-test . --contract OwnerTests --config ./src/echidna/config.yml --test-limit 100000 --format text
+
+      - name: Fuzz mint
+        run: echidna-test . --contract MintTests --config ./src/echidna/config.yml --test-limit 100000 --format text
