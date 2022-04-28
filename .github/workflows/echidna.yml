@@ -19,6 +19,11 @@ jobs:
       - name: Install Crytic Compile
         run: pip3 install crytic-compile
 
+      - name: Install Foundry
+        uses: onbjerg/foundry-toolchain@v1
+        with:
+          version: nightly
+
       - name: Install Echidna
         # Use build with fix for reported issue until new version published 
         run: wget -q -c https://nightly.link/crytic/echidna/actions/artifacts/224513612.zip && unzip -q 224513612.zip && tar xzf echidna-test.tar.gz && rm 224513612.zip  && rm echidna-test.tar.gz
