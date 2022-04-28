@@ -16,7 +16,7 @@ jobs:
 
       # Property tests
       - name: Fuzz owners
-        run: echidna-test . --contract OwnerTests --config ./src/echidna/config.yml --test-limit 100000 --format text
+        run: ./echidna-test . --contract OwnerTests --config ./src/echidna/config.yml --test-limit 100000 --format text
 
       - name: Fuzz mint
-        run: echidna-test . --contract MintTests --config ./src/echidna/config.yml --test-limit 100000 --format text
+        run: ./echidna-test . --contract MintTests --config ./src/echidna/config.yml --test-limit 100000 --format text
