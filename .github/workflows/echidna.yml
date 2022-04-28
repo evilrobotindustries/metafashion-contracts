@@ -10,6 +10,15 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install Solidity Compiler
+        run: pip3 install solc-select && solc-select install 0.8.9 && solc-select use 0.8.9
+
+      - name: Install Slither Analyzer
+        run: pip3 install slither-analyzer
+
+      - name: Install Crytic Compile
+        run: pip3 install crytic-compile
+
       - name: Install Echidna
         # Use build with fix for reported issue until new version published 
         run: wget -q -c https://nightly.link/crytic/echidna/actions/artifacts/224513612.zip && unzip -q 224513612.zip && tar xzf echidna-test.tar.gz && rm 224513612.zip  && rm echidna-test.tar.gz
