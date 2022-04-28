@@ -42,7 +42,7 @@ contract PausableTests is Test {
 
         assertTrue(_contract.paused());
         _contract.unpause();
-        _contract.setPhase(MetaFashion.Phase.Public); // Enable public to mint a token for transfer
+        _contract.setPhase(MetaFashion.MintPhase.Public); // Enable public to mint a token for transfer
 
         address a = address(1);
         _cheatCodes.deal(a, 0.085 ether);

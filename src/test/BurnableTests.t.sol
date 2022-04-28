@@ -12,7 +12,7 @@ contract BurnableTests is Test {
 
     function setUp() public {
         _contract.unpause();
-        _contract.setPhase(MetaFashion.Phase.Public);
+        _contract.setPhase(MetaFashion.MintPhase.Public);
     }
 
     /// @dev Use forge fuzz testing to test using random addresses

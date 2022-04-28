@@ -7,7 +7,7 @@ contract GiveawayMintCosts is Test  {
 
     function setUp() public {
         _contract.unpause();
-        _contract.setPhase(MetaFashion.Phase.VIP);
+        _contract.setPhase(MetaFashion.MintPhase.VIP);
     }
 
     function testMint() public {       

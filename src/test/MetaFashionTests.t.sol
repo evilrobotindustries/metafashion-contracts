@@ -21,44 +21,40 @@ contract MetaFashionTests is Test  {
         _contract.setBaseURI(_URI);
 
         // Mint a token and then check the uri
-        _contract.setPhase(MetaFashion.Phase.Public);
+        _contract.setPhase(MetaFashion.MintPhase.Public);
         _contract.publicMint{value: 0.085 ether }(1);
 
         assertEq(string(abi.encodePacked(_URI, "1")), _contract.tokenURI(1));
     }
 
-    function testSetCollectionSize() public {
-        // Reduce collection size to one less than max transaction mint
-        _contract.setCollectionSize(4);
+    function testSetMaxSupply() public {
+        // Reduce max supply to one less than max transaction mint
+        _contract.setMaxSupply(4);
 
-        // Attempt to mint more than collection size
-        _contract.setPhase(MetaFashion.Phase.Public);
+        // Attempt to mint more than max supply
+        _contract.setPhase(MetaFashion.MintPhase.Public);
         _cheatCodes.expectRevert(InsufficientSupply.selector);
         _contract.publicMint{value: 5 * 0.085 ether }(5);
     }
 
-    function testCannotReduceCollectionSizeLowerThanMinted() public {
-        _contract.setPhase(MetaFashion.Phase.Public);
+    function testCannotReduceMaxSupplyLowerThanMinted() public {
+        _contract.setPhase(MetaFashion.MintPhase.Public);
         _contract.publicMint{value: 5 * 0.085 ether }(5);
         assertEq(_contract.totalSupply(), 5);
 
-        // Attempt to reduce the collection size to size lower than minted
-        _cheatCodes.expectRevert(InvalidCollectionSize.selector);
-        _contract.setCollectionSize(4);
+        // Attempt to reduce the max supply to size lower than minted
+        _cheatCodes.expectRevert(TotalMintedExceedsMaxSupply.selector);
+        _contract.setMaxSupply(4);
 
         // Set to current size and then check mint attempt fails
-        _contract.setCollectionSize(_contract.totalSupply());
+        _contract.setMaxSupply(_contract.totalSupply());
         _cheatCodes.expectRevert(InsufficientSupply.selector);
         _contract.publicMint{value: 0.085 ether }(1);
     }
 
-    function testZeroCollectionSize() public {
-        _contract.setCollectionSize(0);
-
-        // Attempt to mint more than collection size
-        _contract.setPhase(MetaFashion.Phase.Public);
-        _cheatCodes.expectRevert(InsufficientSupply.selector);
-        _contract.publicMint{value: 0.085 ether }(1);
+    function testZeroSupply() public {
+        _cheatCodes.expectRevert(InvalidSupply.selector);
+        _contract.setMaxSupply(0);
     }
 
     function testSetPhaseAsPublic() public {
@@ -71,7 +67,7 @@ contract MetaFashionTests is Test  {
         _cheatCodes.prank(addr);
         _contract.publicMint{value: value}(1);
 
-        _contract.setPhase(MetaFashion.Phase.Public);
+        _contract.setPhase(MetaFashion.MintPhase.Public);
 
         _cheatCodes.prank(addr);
         _contract.publicMint{value: value}(1);
@@ -87,7 +83,7 @@ contract MetaFashionTests is Test  {
         _cheatCodes.prank(addr);
         _contract.vipMint{value: value}(1, new bytes32[](0));
 
-        _contract.setPhase(MetaFashion.Phase.VIP);
+        _contract.setPhase(MetaFashion.MintPhase.VIP);
 
         bytes32[] memory proof = new bytes32[](2);
         proof[0] = 0x5b70e80538acdabd6137353b0f9d8d149f4dba91e8be2e7946e409bfdbe685b9;
@@ -104,7 +100,7 @@ contract MetaFashionTests is Test  {
         _cheatCodes.deal(addr, value);
 
         // Attempt to mint with default merkle root set, expecting failure as address not included
-        _contract.setPhase(MetaFashion.Phase.VIP);
+        _contract.setPhase(MetaFashion.MintPhase.VIP);
         _cheatCodes.prank(addr);
         _cheatCodes.expectRevert(NotVIP.selector);
         _contract.vipMint{value: value}(1, new bytes32[](0));
@@ -154,7 +150,7 @@ contract MetaFashionTests is Test  {
     function testTokenIdStartsAtOne() public {
         // Mint the first token
         assertEq(0, _contract.totalSupply());
-        _contract.setPhase(MetaFashion.Phase.Public);
+        _contract.setPhase(MetaFashion.MintPhase.Public);
         _contract.publicMint{value: 0.085 ether }(1);
 
         // Ensure token 0 does not exist

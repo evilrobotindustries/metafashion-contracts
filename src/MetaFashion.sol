@@ -20,19 +20,20 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-error IncorrectValue();
-error InvalidCollectionSize();
+error IncorrectEtherValue();
+error InvalidSupply();
 error MintingPaused();
 error NotVIP();
 error PublicMintInactive();
 error InsufficientSupply();
+error TotalMintedExceedsMaxSupply();
 error TransactionMintLimitExceeded();
 error TransactionLimitExceeded();
 error VIPMintInactive();
 
 contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable, ReentrancyGuard {
 
-    enum Phase {
+    enum MintPhase {
         None,
         VIP,
         Public
@@ -54,21 +55,21 @@ contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable, Reen
     /// @notice The VIP mint price.
     uint256 private constant _VIP_PRICE = 0.075 ether;
 
-    bytes32 private _vipMerkleRoot; // Merkle root for validating VIP addresses
     string private _tokenBaseURI; // Base URI for tokens
-    uint256 private _collectionSize = 10000; // The total collection size.
-    Phase private _phase = Phase.None; // The current phase
+    bytes32 public vipMerkleRoot; // Merkle root for validating VIP addresses
+    uint256 public maxSupply = 10000; // The max supply available.
+    MintPhase public phase = MintPhase.None; // The current mint phase
     
     // events
 
     // modifiers
     modifier whenVIP() {
-        if (_phase != Phase.VIP) revert VIPMintInactive();
+        if (phase != MintPhase.VIP) revert VIPMintInactive();
         _;
     }
 
     modifier whenPublic() {
-        if (_phase != Phase.Public) revert PublicMintInactive();
+        if (phase != MintPhase.Public) revert PublicMintInactive();
         _;
     }
 
@@ -77,21 +78,21 @@ contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable, Reen
         _;
     }
 
-    modifier whenCorrectValueSent(uint256 quantity, uint256 price) {
-        if (msg.value != quantity * price) revert IncorrectValue();
+    modifier whenCorrectEtherSent(uint256 quantity, uint256 price) {
+        if (msg.value != quantity * price) revert IncorrectEtherValue();
         _;
     }
 
     modifier whenSufficientSupply(uint256 quantity) {
-        if (_totalMinted() + quantity > _collectionSize) revert InsufficientSupply();
+        if (_totalMinted() + quantity > maxSupply) revert InsufficientSupply();
         _;
     }
 
     // constructor
 
-    constructor(bytes32 vipMerkleRoot, string memory tokenBaseURI) ERC721A("MetaFashion", "MFT") {
-        _vipMerkleRoot = vipMerkleRoot;
-        _tokenBaseURI = tokenBaseURI;
+    constructor(bytes32 merkleRoot, string memory uri) ERC721A("MetaFashion", "MFT") {
+        vipMerkleRoot = merkleRoot;
+        _tokenBaseURI = uri;
         _pause(); // Pause until explicitly enabled
     }
 
@@ -103,13 +104,13 @@ contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable, Reen
         whenNotPaused
         whenVIP
         whenQuantityWithinMintLimit(quantity, _VIP_MAX_MINT)
-        whenCorrectValueSent(quantity, _VIP_PRICE)
+        whenCorrectEtherSent(quantity, _VIP_PRICE)
         whenSufficientSupply(quantity) 
     {
         // Validate VIP eligibility
         if (!MerkleProof.verify(
             proof,
-            _vipMerkleRoot,
+            vipMerkleRoot,
             keccak256(abi.encodePacked(_msgSender()))
         )) revert NotVIP();
 
@@ -122,13 +123,13 @@ contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable, Reen
         _safeMint(_msgSender(), quantity);
     }
 
-    function publicMint(uint8 quantity) 
+    function publicMint(uint256 quantity) 
         external 
         payable 
         whenNotPaused
         whenPublic
         whenQuantityWithinMintLimit(quantity, _PUBLIC_MAX_MINT)
-        whenCorrectValueSent(quantity, _PUBLIC_PRICE)
+        whenCorrectEtherSent(quantity, _PUBLIC_PRICE)
         whenSufficientSupply(quantity) 
     {
         // Check public transaction limit
@@ -160,17 +161,18 @@ contract MetaFashion is ERC721A, ERC721ABurnable, ERC721APausable, Ownable, Reen
         _tokenBaseURI = uri;
     }
 
-    function setCollectionSize(uint256 size) external onlyOwner {
-        if (size < _totalMinted()) revert InvalidCollectionSize();
-        _collectionSize = size;
+    function setMaxSupply(uint256 supply) external onlyOwner {
+        if (supply == 0) revert InvalidSupply();
+        if (supply < _totalMinted()) revert TotalMintedExceedsMaxSupply();
+        maxSupply = supply;
     }
 
-    function setPhase(Phase phase) external onlyOwner {
-        _phase = phase;
+    function setPhase(MintPhase mintPhase) external onlyOwner {
+        phase = mintPhase;
     }
 
     function setVIPMerkleRoot(bytes32 merkleRoot) external onlyOwner {
-        _vipMerkleRoot = merkleRoot;
+        vipMerkleRoot = merkleRoot;
     }
 
     function unpause() external onlyOwner {

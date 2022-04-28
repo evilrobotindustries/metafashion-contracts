@@ -10,7 +10,7 @@ contract PublicMintCosts is Test  {
 
     function setUp() public {
         _contract.unpause();
-        _contract.setPhase(MetaFashion.Phase.Public);
+        _contract.setPhase(MetaFashion.MintPhase.Public);
 
         // Fund address
         _cheatCodes.deal(_MINT_ADDRESS, 10 ether); 

@@ -23,16 +23,16 @@ contract OwnableTests is Test {
         _contract.setBaseURI(_URI);
     }
 
-    function testCannotSetCollectionSizeAsNonOwner() public {
+    function testCannotSetMaxSupplyAsNonOwner() public {
         _cheatCodes.prank(address(1));
         _cheatCodes.expectRevert("Ownable: caller is not the owner");
-        _contract.setCollectionSize(5);
+        _contract.setMaxSupply(5);
     }
 
     function testCannotSetPhaseAsNonOwner() public {
         _cheatCodes.prank(address(1));
         _cheatCodes.expectRevert("Ownable: caller is not the owner");
-        _contract.setPhase(MetaFashion.Phase.VIP);
+        _contract.setPhase(MetaFashion.MintPhase.VIP);
     }
 
     function testCannotSetVIPMerkleRootAsNonOwner() public {

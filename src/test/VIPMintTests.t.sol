@@ -10,7 +10,7 @@ contract VIPMintTests is Test  {
 
     function setUp() public {
         _contract.unpause();
-        _contract.setPhase(MetaFashion.Phase.VIP);
+        _contract.setPhase(MetaFashion.MintPhase.VIP);
 
         // Initialise merkle proof for mint address
         _proof[0] = 0x5b70e80538acdabd6137353b0f9d8d149f4dba91e8be2e7946e409bfdbe685b9;
@@ -24,7 +24,7 @@ contract VIPMintTests is Test  {
     }
 
     function testCannotMintWhenVIPMintingInactive() public {
-        _contract.setPhase(MetaFashion.Phase.None);
+        _contract.setPhase(MetaFashion.MintPhase.None);
 
         _cheatCodes.expectRevert(VIPMintInactive.selector);
         _contract.vipMint(1, new bytes32[](0));
@@ -35,13 +35,13 @@ contract VIPMintTests is Test  {
         _contract.vipMint(4, new bytes32[](0));
     }
 
-    function testCannotMintWhenIncorrectValueSent() public {
-        _cheatCodes.expectRevert(IncorrectValue.selector);
+    function testCannotMintWhenIncorrectEtherValueSent() public {
+        _cheatCodes.expectRevert(IncorrectEtherValue.selector);
         _contract.vipMint(3, new bytes32[](0));
     }
 
-    function testCannotExceedCollectionSize() public {
-        _contract.setCollectionSize(2);
+    function testCannotExceedMaxSupply() public {
+        _contract.setMaxSupply(2);
         
         _cheatCodes.deal(address(1), 3 * _PRICE);
         _cheatCodes.prank(address(1));

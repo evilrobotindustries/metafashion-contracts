@@ -9,7 +9,7 @@ contract PublicMintTests is Test  {
 
     function setUp() public {
         _contract.unpause();
-        _contract.setPhase(MetaFashion.Phase.Public);
+        _contract.setPhase(MetaFashion.MintPhase.Public);
     }
 
     function testCannotMintWhenPaused() public {
@@ -19,7 +19,7 @@ contract PublicMintTests is Test  {
     }
 
     function testCannotMintUntilPublicMintActive() public {
-        _contract.setPhase(MetaFashion.Phase.None);
+        _contract.setPhase(MetaFashion.MintPhase.None);
 
         _cheatCodes.expectRevert(PublicMintInactive.selector);
         _contract.publicMint(1);
@@ -30,14 +30,14 @@ contract PublicMintTests is Test  {
         _contract.publicMint(6);
     }
 
-    function testCannotMintWhenIncorrectValueSent() public {
-        _cheatCodes.expectRevert(IncorrectValue.selector);
+    function testCannotMintWhenIncorrectEtherValueSent() public {
+        _cheatCodes.expectRevert(IncorrectEtherValue.selector);
         _contract.publicMint(5);
     }
 
-    function testCannotExceedCollectionSize() public {
+    function testCannotExceedMaxSupply() public {
         
-        _contract.setCollectionSize(2);
+        _contract.setMaxSupply(2);
 
         // Fund address
         _cheatCodes.deal(address(1), 3 * _PRICE);
@@ -112,7 +112,7 @@ contract PublicMintTests is Test  {
         _cheatCodes.deal(addr, (3 * 0.075 ether) + (3 * 5 * 0.085 ether));
 
         // VIP mint max
-        _contract.setPhase(MetaFashion.Phase.VIP);
+        _contract.setPhase(MetaFashion.MintPhase.VIP);
         bytes32[] memory proof = new bytes32[](2);
         proof[0] = 0x5b70e80538acdabd6137353b0f9d8d149f4dba91e8be2e7946e409bfdbe685b9;
         proof[1] = 0xd52688a8f926c816ca1e079067caba944f158e764817b83fc43594370ca9cf62;
@@ -121,7 +121,7 @@ contract PublicMintTests is Test  {
         assertEq(_contract.balanceOf(addr), 3);
 
         // Public mint max
-        _contract.setPhase(MetaFashion.Phase.Public);
+        _contract.setPhase(MetaFashion.MintPhase.Public);
         uint256 value = 5 * _PRICE;
         _cheatCodes.startPrank(addr);
         _contract.publicMint{value: value}(5);

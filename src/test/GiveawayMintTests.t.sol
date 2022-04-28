@@ -10,7 +10,7 @@ contract GiveawayMintTests is Test  {
 
     function setUp() public {
         _contract.unpause();
-        _contract.setPhase(MetaFashion.Phase.VIP);
+        _contract.setPhase(MetaFashion.MintPhase.VIP);
     }
 
     function testCannotMintWhenPaused() public {
@@ -20,14 +20,14 @@ contract GiveawayMintTests is Test  {
     }
 
     function testCannotMintWhenVIPMintingInactive() public {
-        _contract.setPhase(MetaFashion.Phase.None);
+        _contract.setPhase(MetaFashion.MintPhase.None);
 
         _cheatCodes.expectRevert(VIPMintInactive.selector);
         _contract.giveawayMint();
     }
 
-    function testCannotExceedCollectionSize() public {
-        _contract.setCollectionSize(99);
+    function testCannotExceedMaxSupply() public {
+        _contract.setMaxSupply(99);
         _cheatCodes.expectRevert(InsufficientSupply.selector);
         _contract.giveawayMint();
     }
